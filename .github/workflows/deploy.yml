@@ -67,6 +67,7 @@ jobs:
             set -e
             cd ~/resume-tailor
             docker-compose pull
-            docker-compose up -d --remove-orphans
+            docker rm -f resume-tailor-backend resume-tailor-frontend || true
+            docker-compose up -d 
             docker image prune -f
 

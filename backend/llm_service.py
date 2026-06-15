@@ -51,7 +51,10 @@ def _extract_json(text: str) -> Dict[str, Any]:
 
 def analyze_with_openai(api_key: str, model: str, resume_text: str, job: Dict[str, Any]) -> Dict[str, Any]:
     from openai import OpenAI
-    client = OpenAI(api_key=api_key)
+    client = OpenAI(
+    api_key=api_key,
+    base_url="https://api.groq.com/openai/v1"
+)
     resp = client.chat.completions.create(
         model=model or "gpt-4o-mini",
         messages=[
