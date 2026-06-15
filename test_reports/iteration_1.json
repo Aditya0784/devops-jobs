@@ -1,0 +1,40 @@
+{
+  "summary": "Iteration 1: Full backend API testing (15 pytest tests, all PASS) + frontend smoke + settings flow. Scrape, jobs list/filter/search, job 404/200, resume PDF/DOCX upload, .txt rejection (400), and analyze/download error paths all behave correctly. Frontend loads, scrape button triggers job population (12 entries within 1s), SRE tab renders, settings modal works (save disabled until key entered, creds-status updates with masked key).",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "POST /api/analyze (502 path)", "issue": "When LLM call raises, server returns 502 with stack-formatted message including provider error verbatim (e.g. API key leakage risk if user-supplied key echoed back). Not tested with real key, but worth sanitizing."},
+      {"endpoint": "POST /api/resume/upload", "issue": "10MB hard limit is enforced after reading entire body — large uploads still consume memory before rejection. Consider streaming size check."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "JobList under tab-sre", "issue": "A job with role_type=devops badge ('Applied AI Engineer, ML Infrastructure Engineer / Devo...') is visible while SRE tab is active. Either the role tab does not refetch with role param, or jobs are cached and not re-filtered client-side.", "selector": "[data-testid='tab-sre'] + [data-testid='jobs-list']", "priority": "MEDIUM"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Dashboard", "issues": ["Terminal/dark theme with green-on-black is readable; toast 'Credentials saved locally' shown briefly in bottom-right with good contrast."]}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/test_api.py", "/app/test_reports/pytest/pytest_results.xml"],
+  "action_items": [
+    "Investigate SRE tab filter: confirm that switching tab triggers GET /api/jobs?role=sre and that the list is replaced (a devops-badged item appeared in the SRE list).",
+    "Consider redacting/sanitizing LLM error messages in /api/analyze before returning to client.",
+    "Backend startup uses @app.on_event('shutdown') which is deprecated in FastAPI — migrate to lifespan handlers."
+  ],
+  "critical_code_review_comments": [
+    "server.py:105 POST /api/scrape replaces ALL jobs with delete_many({}) — fine for MVP, but concurrent scrape requests can race and produce empty windows.",
+    "server.py:179 API key length check (>=10) is weak; provider-specific format check would be safer.",
+    "server.py:245 @app.on_event('shutdown') is deprecated — use lifespan context manager.",
+    "resume_parser.py path: no MIME sniffing; relies only on filename extension (acceptable for MVP).",
+    "Frontend should ensure each tab click resets selected job and refetches with role param to avoid stale entries."
+  ],
+  "updated_files": ["/app/backend/tests/test_api.py"],
+  "success_rate": {"backend": "100% (15/15)", "frontend": "100% smoke (app-title, scrape, jobs-list populated, tab-sre, settings modal open/close, key save, creds-status)"},
+  "test_credentials": "Not required for tested paths (BYO key paths only verified for error responses).",
+  "seed_data_creation": "POST /api/scrape with slugs [stripe, airbnb, databricks, gitlab, cloudflare, netflix] populates jobs collection. Dummy resumes generated via fpdf2 and python-docx inside tests.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Backend tests live at /app/backend/tests/test_api.py and use REACT_APP_BACKEND_URL. fpdf2 was installed for PDF generation; ensure it remains in requirements if you depend on this test file. Real OpenAI/Gemini success paths for /api/analyze and /api/download (pdf/docx) were intentionally NOT tested — only 404/400 error paths. To verify the SRE-tab-shows-devops-job bug, click SCRAPE JOBS then click the SRE tab and inspect badge values vs role param sent in the network tab.",
+  "rca of the issue": "SRE tab containing a DEVOPS-badged item: most likely caused either by (a) frontend not passing role=sre query param when tab changes, or (b) jobs state not being reset between tab switches. Backend /api/jobs?role=sre filter has been verified to return only role_type=='sre' items via pytest, so the bug is on the client side."
+}

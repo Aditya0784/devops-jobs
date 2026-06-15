@@ -1,0 +1,16 @@
+node_modules
+.git
+.github
+.idea
+.vscode
+__pycache__
+*.pyc
+.pytest_cache
+.env
+.env.*
+build
+dist
+.DS_Store
+README.md
+DEPLOYMENT.md
+test_reports

@@ -1,0 +1,31 @@
+version: "3.9"
+
+services:
+
+  backend:
+    image: ${DOCKERHUB_USER}/resume-tailor-backend:${IMAGE_TAG:-latest}
+    container_name: resume-tailor-backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    expose:
+      - 8001
+    networks:
+      - appnet
+  
+
+  frontend:
+    image: ${DOCKERHUB_USER}/resume-tailor-frontend:${IMAGE_TAG:-latest}
+    container_name: resume-tailor-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - appnet
+
+networks:
+  appnet:
+    driver: bridge
+

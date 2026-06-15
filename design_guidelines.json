@@ -1,0 +1,118 @@
+{
+  "theme": "Dark",
+  "archetype": "Retro-Futurism / Terminal Look",
+  "domain": "Developer Tools / Career SaaS",
+  "mood": "Technical, Data-dense, Utilitarian, Objective",
+  "typography": {
+    "strategy": "CLI-inspired interface combining strict monospace for headings/data with clean geometric sans for readability in body text.",
+    "fonts": {
+      "headings": "JetBrains Mono, Roboto Mono, ui-monospace",
+      "body": "Inter, UI Sans-Serif, system-ui",
+      "stats_and_code": "JetBrains Mono, ui-monospace"
+    },
+    "hierarchy": {
+      "h1": "text-4xl sm:text-5xl tracking-tighter font-bold uppercase",
+      "h2": "text-2xl sm:text-3xl tracking-tight font-semibold",
+      "h3": "text-xl sm:text-2xl font-medium",
+      "body": "text-sm md:text-base leading-relaxed",
+      "labels": "text-xs uppercase tracking-[0.2em] text-zinc-500",
+      "code_blocks": "text-sm font-mono bg-zinc-900 p-4 border border-zinc-800"
+    }
+  },
+  "colors": {
+    "strategy": "Dark graphite/charcoal surfaces with high-contrast muted neon accents. Avoid pure black.",
+    "palette": {
+      "background_primary": "bg-zinc-950",
+      "background_secondary": "bg-zinc-900/50",
+      "surface": "bg-zinc-900",
+      "border": "border-zinc-800",
+      "border_hover": "border-zinc-700",
+      "text_primary": "text-zinc-100",
+      "text_secondary": "text-zinc-400",
+      "text_muted": "text-zinc-500"
+    },
+    "accents": {
+      "primary": "text-emerald-400",
+      "primary_bg": "bg-emerald-500",
+      "primary_muted": "bg-emerald-500/10 border-emerald-500/30",
+      "warning": "text-amber-500",
+      "error": "text-rose-500",
+      "info": "text-cyan-400"
+    }
+  },
+  "layout_and_spacing": {
+    "grid_strategy": "Control Room Grid (Mode B). Dense, compact spacing to maximize data visibility without overwhelming the user.",
+    "base_grid": "grid-cols-1 md:grid-cols-3 lg:grid-cols-4",
+    "spacing_scale": "p-4, p-6, p-8. Use generous internal padding for containers to prevent text collision.",
+    "gap": "gap-4 md:gap-6",
+    "border_radius": "rounded-none or max rounded-sm. Keep it sharp and brutalist.",
+    "shadows": "No soft drop shadows. Rely on 1px solid borders and subtle inner glows or hard shadows if needed."
+  },
+  "visual_enhancers": {
+    "surfaces": "Grid Borders strategy. Expose the skeleton with visible border lines on cards and containers.",
+    "glow_effects": "Use subtle drop-shadows on active terminal text. drop-shadow-[0_0_8px_rgba(52,211,153,0.5)]",
+    "textures": "Include subtle CSS repeating-linear-gradient for scanlines on empty states or hero headers."
+  },
+  "components": {
+    "buttons": {
+      "primary": "bg-emerald-500 text-zinc-950 font-bold uppercase tracking-widest hover:bg-emerald-400 transition-colors",
+      "secondary": "border border-zinc-800 text-zinc-300 bg-transparent hover:border-emerald-500/50 hover:text-emerald-400 transition-colors",
+      "ghost": "text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900"
+    },
+    "cards_and_widgets": {
+      "style": "Flat background (zinc-900/50), 1px solid border-zinc-800, no shadow. Sharp corners.",
+      "hover_state": "border-zinc-600 bg-zinc-900/80"
+    },
+    "inputs_and_forms": {
+      "style": "bg-zinc-950 border border-zinc-800 text-zinc-100 focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500. Monospace font for input values.",
+      "labels": "text-xs uppercase tracking-widest text-zinc-400 mb-2 block"
+    },
+    "navigation": {
+      "style": "Solid zinc-950 background with a hard bottom/right border-zinc-800. Sticky positioning with z-50."
+    },
+    "data_displays": {
+      "tables": "Dense layout, uppercase headers, hover states on rows. Avoid excessive padding.",
+      "badges": "Monospace, uppercase, border border-emerald-500/30 text-emerald-400 bg-emerald-500/10 px-2 py-1 text-xs"
+    }
+  },
+  "motion": {
+    "strategy": "Minimalist and instant. Micro-interactions for feedback only.",
+    "transitions": "Fast (150ms) property-specific transitions (e.g., transition-colors, transition-opacity).",
+    "loaders": "ASCII art loaders, blinking cursors, or simple monospace text counters (e.g., [ 0% ] -> [ 100% ])."
+  },
+  "accessibility": {
+    "contrast": "Minimum 4.5:1 for body text. Text shadows used over any visual noise.",
+    "focus_states": "Visible focus states required. focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-zinc-950",
+    "testing_attributes": "All interactive elements MUST include data-testid attribute (e.g., data-testid='upload-resume-button')."
+  },
+  "media_and_assets": {
+    "icons": {
+      "library": "lucide-react (default) or @phosphor-icons/react",
+      "style": "Sharp, technical, and precise. Set stroke-width to 1.5 or 2."
+    },
+    "image_urls": [
+      {
+        "category": "hero_background",
+        "url": "https://images.unsplash.com/photo-1547190027-9156686aa2f0?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1Nzl8MHwxfHNlYXJjaHwzfHxhYnN0cmFjdCUyMGRhcmslMjBtYXRyaXglMjBjb2RlJTIwdGVybWluYWwlMjBiYWNrZ3JvdW5kfGVufDB8fHx8MTc4MTUwMjI4M3ww&ixlib=rb-4.1.0&q=85",
+        "description": "Abstract dark matrix code terminal background. Use with low opacity (10-20%) for landing page hero or empty states."
+      },
+      {
+        "category": "placeholder_user",
+        "url": "https://images.unsplash.com/photo-1719400471588-575b23e27bd7?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxODd8MHwxfHNlYXJjaHwyfHxoYWNrZXIlMjBkZXZvcHMlMjB0ZWNoJTIwc2VydmVyJTIwcm9vbSUyMGRhcmt8ZW58MHx8fHwxNzgxNTAyMjgzfDA&ixlib=rb-4.1.0&q=85",
+        "description": "A man in front of monitors (DevOps hacker vibe) for decorative usage in about sections or auth screens."
+      }
+    ]
+  },
+  "instructions_to_main_agent": [
+    "Install required dependencies: lucide-react, recharts, sonner, clsx, tailwind-merge.",
+    "Use standard HTML/Tailwind for the main layout to preserve the exact 'terminal' aesthetic, but use Shadcn for complex components like Dialog, Select, Tabs.",
+    "CRITICAL: Strip Vercel-like styles from Shadcn components. Remove rounded corners (rounded-md -> rounded-none), remove soft box shadows, and use solid zinc-800 borders.",
+    "Build a robust Dashboard layout using CSS Grid. Use the 'Control Room Grid' pattern.",
+    "Implement an API settings modal/panel where users can enter their OpenAI/Gemini API key. Ensure the input type is password.",
+    "For the Job List, include clear badge components for 'DevOps', 'SRE', and 'Cloud Architect'.",
+    "For the Match Score feature, use bold typography and color-coding (Emerald > 80%, Amber 50-80%, Rose < 50%). Consider a circular progress component or progress bar.",
+    "Ensure 'data-testid' is added to every form, input, and action button for end-to-end testing.",
+    "Add toast notifications (via sonner) for key actions: Job Scraping Complete, Resume Uploaded, Tailored Resume Generated.",
+    "Never use generic purple or teal gradients. Stick to the graphite, emerald, and amber palette."
+  ]
+}
