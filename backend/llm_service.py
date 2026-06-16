@@ -51,9 +51,11 @@ def _extract_json(text: str) -> Dict[str, Any]:
 
 def analyze_with_openai(api_key: str, model: str, resume_text: str, job: Dict[str, Any]) -> Dict[str, Any]:
     from openai import OpenAI
-    client = OpenAI(api_key=api_key)
+    client = OpenAI(api_key=api_key,
+                     base_url="https://api.openai.com/v1",
+                    )
     resp = client.chat.completions.create(
-        model=model or "gpt-4o-mini",
+        model=model or "llama-3.3-70b-versatile",
         messages=[
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": _build_user_prompt(resume_text, job["title"], job["company"], job["description"])},
