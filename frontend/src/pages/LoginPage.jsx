@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
-import { Lock, RefreshCw } from "lucide-react";
+import { Lock, RefreshCw, Eye, EyeOff } from "lucide-react";
 import { API } from "@/lib/api";
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 // ── Math CAPTCHA generator ─────────────────────────────────────────────────
 function makeCaptcha() {
@@ -30,6 +31,7 @@ export default function LoginPage({ onLogin }) {
   const [captcha, setCaptcha] = useState(() => makeCaptcha());
   const [error, setError] = useState("");
   const [shake, setShake] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [attempts, setAttempts] = useState(0);
   const [lockedUntil, setLockedUntil] = useState(null);
@@ -66,14 +68,14 @@ export default function LoginPage({ onLogin }) {
     if (lockedUntil) return;
 
     // Basic validation
-    if (!username.trim()) return setError("Username daalo");
-    if (!password.trim()) return setError("Password daalo");
-    if (!captchaInput.trim()) return setError("CAPTCHA solve karo");
+    if (!username.trim()) return setError("Enter Your Username");
+    if (!password.trim()) return setError("Enter Your Password");
+    if (!captchaInput.trim()) return setError("Solve the CAPTCHA");
 
     // CAPTCHA check
     if (captchaInput.trim() !== captcha.answer) {
       triggerShake();
-      setError("❌ CAPTCHA galat hai");
+      setError("❌ CAPTCHA is incorrect");
       refreshCaptcha();
       return;
     }
@@ -82,7 +84,7 @@ export default function LoginPage({ onLogin }) {
     setError("");
 
     try {
-      const res = await fetch(`${API}/auth/login`, {
+      const res = await fetch(`${BACKEND_URL}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username: username.trim(), password }),
@@ -102,13 +104,13 @@ export default function LoginPage({ onLogin }) {
         if (newAttempts >= 3) {
           // 60 second lockout after 3 failed attempts
           setLockedUntil(Date.now() + 60_000);
-          setError("3 baar galat — 60 seconds ke liye locked");
+          setError("3 failed attempts — locked for 60 seconds");
         } else {
-          setError(`❌ Username ya password galat hai (${3 - newAttempts} try bachi)`);
+          setError(`❌ Incorrect username or password (${3 - newAttempts} attempts remaining)`);
         }
       }
     } catch {
-      setError("Server se connect nahi ho pa raha");
+      setError("Failed to connect to server");
     } finally {
       setLoading(false);
     }
@@ -125,8 +127,8 @@ export default function LoginPage({ onLogin }) {
         {/* Header */}
         <div className="border border-zinc-800 bg-zinc-900/60 p-8">
           <div className="flex items-center gap-3 mb-8">
-            <div className="w-10 h-10 border border-zinc-700 bg-zinc-800 flex items-center justify-center">
-              <Lock className="w-5 h-5 text-emerald-400" />
+            <div className="w-10 h-10 border border-zinc-700 bg-zinc-800 flex items-center justify-center overflow-hidden">
+              <img src="/logo.png" alt="logo" className="w-8 h-8 object-contain" />
             </div>
             <div>
               <div className="font-semibold tracking-tight">AdityaJobTool</div>
@@ -146,26 +148,36 @@ export default function LoginPage({ onLogin }) {
                 disabled={isLocked}
                 onChange={(e) => { setUsername(e.target.value); setError(""); }}
                 onKeyDown={(e) => e.key === "Enter" && attempt()}
-                placeholder="aditya"
+                placeholder="Enter your username"
                 autoFocus
                 className="w-full bg-zinc-950 border border-zinc-700 px-3 py-2.5 text-sm font-mono text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/60 transition-colors disabled:opacity-40"
               />
             </div>
 
-            {/* Password */}
+              {/* Password */}
             <div>
               <label className="block text-[10px] uppercase tracking-[0.2em] text-zinc-500 font-mono mb-1.5">
                 Password
               </label>
-              <input
-                type="password"
-                value={password}
-                disabled={isLocked}
-                onChange={(e) => { setPassword(e.target.value); setError(""); }}
-                onKeyDown={(e) => e.key === "Enter" && attempt()}
-                placeholder="••••••••"
-                className="w-full bg-zinc-950 border border-zinc-700 px-3 py-2.5 text-sm font-mono text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/60 transition-colors disabled:opacity-40"
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  disabled={isLocked}
+                  onChange={(e) => { setPassword(e.target.value); setError(""); }}
+                  onKeyDown={(e) => e.key === "Enter" && attempt()}
+                  placeholder="••••••••"
+                  className="w-full bg-zinc-950 border border-zinc-700 px-3 py-2.5 pr-10 text-sm font-mono text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/60 transition-colors disabled:opacity-40"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-emerald-400 transition-colors"
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
 
             {/* CAPTCHA */}
@@ -195,7 +207,7 @@ export default function LoginPage({ onLogin }) {
                 disabled={isLocked}
                 onChange={(e) => { setCaptchaInput(e.target.value); setError(""); }}
                 onKeyDown={(e) => e.key === "Enter" && attempt()}
-                placeholder="Jawab daalo"
+                placeholder="Solve the answer"
                 className="w-full bg-zinc-950 border border-zinc-700 px-3 py-2.5 text-sm font-mono text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/60 transition-colors disabled:opacity-40"
               />
             </div>
