@@ -222,7 +222,7 @@ export default function LoginPage({ onLogin }) {
             {/* Lockout timer */}
             {isLocked && (
               <div className="text-xs text-amber-400 font-mono bg-amber-500/10 border border-amber-500/20 px-3 py-2 text-center">
-                🔒 {countdown} seconds mein try kar sakte ho
+                🔒 Try again after {countdown} seconds
               </div>
             )}
 
