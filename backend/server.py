@@ -67,7 +67,7 @@ class Job(BaseModel):
     url: str
     description: str
     external_id: str
-    status: str = "new"  # new | reviewed | applied
+    status: str = "new"  # new | reviewed | applied | ignored
     years_min: Optional[int] = None
     years_max: Optional[int] = None
     experience_text: Optional[str] = None
@@ -113,7 +113,7 @@ class JobStatusUpdate(BaseModel):
     status: str  # new | reviewed | applied
 
 
-VALID_STATUSES = {"new", "reviewed", "applied"}
+VALID_STATUSES = {"new", "reviewed", "applied", "ignored"}
 
 
 # ---------- Scrape job (shared) ----------
@@ -240,6 +240,9 @@ async def list_jobs(
         query["company"] = company
     if status and status != "all":
         query["status"] = status
+    else:
+        # By default, exclude ignored jobs unless explicitly requested
+        query["status"] = {"$ne": "ignored"}
     if region and region != "all":
         query["region"] = region
     if tag:
@@ -302,7 +305,7 @@ async def jobs_facets(
 @api.get("/jobs/stats")
 async def jobs_stats():
     out = {
-        "by_status": {"new": 0, "reviewed": 0, "applied": 0},
+        "by_status": {"new": 0, "reviewed": 0, "applied": 0, "ignored": 0},
         "by_region": {"india": 0, "remote": 0},
         "by_role": {"devops": 0, "sre": 0, "cloud_architect": 0},
         "by_tag": {"aws": 0, "azure": 0, "gcp": 0, "kubernetes": 0, "terraform": 0, "docker": 0, "ci_cd": 0},
@@ -445,6 +448,43 @@ async def download_tailored(req: TailoredDownloadRequest):
         )
     raise HTTPException(400, "format must be pdf or docx")
 
+
+import hashlib, secrets, json
+
+# ---------------------------------------------------------------------------
+# Auth — multi-user login
+# Users defined in .env as JSON: USERS='[{"username":"aditya","password":"mypass123"},{"username":"rahul","password":"pass456"}]'
+# ---------------------------------------------------------------------------
+USERS_RAW = os.environ.get("USERS", "[]")
+try:
+    USERS_LIST = json.loads(USERS_RAW)
+except Exception:
+    USERS_LIST = []
+
+# Active sessions: token -> username
+_sessions: dict = {}
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+class LoginResponse(BaseModel):
+    token: str
+    username: str
+
+@api.post("/auth/login")
+async def auth_login(req: LoginRequest):
+    for u in USERS_LIST:
+        if u.get("username") == req.username and u.get("password") == req.password:
+            token = secrets.token_hex(32)
+            _sessions[token] = req.username
+            return LoginResponse(token=token, username=req.username)
+    raise HTTPException(401, "Invalid username or password")
+
+@api.post("/auth/logout")
+async def auth_logout(token: str):
+    _sessions.pop(token, None)
+    return {"ok": True}
 
 app.include_router(api)
 app.add_middleware(

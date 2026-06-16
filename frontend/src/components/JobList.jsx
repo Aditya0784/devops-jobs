@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ExternalLink, MapPin, Check, Eye, Send, Sparkles, ChevronDown, Download, FileText, AlertCircle, X } from "lucide-react";
+import { ExternalLink, MapPin, Check, Eye, Send, Sparkles, ChevronDown, Download, FileText, AlertCircle, X, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { apiAnalyze, apiDownload, downloadBlob } from "@/lib/api";
 
@@ -13,12 +13,14 @@ const STATUS_OPTIONS = [
   { key: "new", short: "New", icon: Eye },
   { key: "reviewed", short: "Reviewed", icon: Check },
   { key: "applied", short: "Applied", icon: Send },
+  { key: "ignored", short: "Ignore", icon: EyeOff },
 ];
 
 const STATUS_BAR_CLS = {
   new: "border-l-2 border-transparent",
   reviewed: "border-l-2 border-cyan-400/70",
   applied: "border-l-2 border-emerald-400",
+  ignored: "border-l-2 border-rose-500/50 opacity-60",
 };
 
 export default function JobList({ jobs, loading, onStatusChange, resume, llmReady, onSelectForResume }) {
@@ -73,7 +75,6 @@ function JobRow({ job, onStatusChange, resume, llmReady, onSelectForResume }) {
       const r = await apiAnalyze({ resume_id: resume.id, job_id: job.id });
       setAnalysis(r);
       toast.success(`Match score: ${r.match_score}/100`);
-      // Auto-bump to reviewed if currently new
       if (status === "new") onStatusChange(job, "reviewed");
     } catch (e) {
       toast.error(e?.response?.data?.detail || "Tailoring failed");
@@ -97,7 +98,7 @@ function JobRow({ job, onStatusChange, resume, llmReady, onSelectForResume }) {
   };
 
   return (
-    <li data-testid={`job-${job.id}`} className={`${STATUS_BAR_CLS[status]} ${expanded ? "bg-zinc-900/60" : ""} transition-colors`}>
+    <li data-testid={`job-${job.id}`} className={`${STATUS_BAR_CLS[status] || "border-l-2 border-transparent"} ${expanded ? "bg-zinc-900/60" : ""} transition-colors`}>
       <div className="px-4 py-3">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
@@ -140,15 +141,17 @@ function JobRow({ job, onStatusChange, resume, llmReady, onSelectForResume }) {
 
         {/* Action row */}
         <div className="mt-3 flex flex-wrap items-center gap-2">
-          <button
-            data-testid={`tailor-btn-${job.id}`}
-            onClick={runTailor}
-            disabled={busy}
-            className="text-[11px] font-medium tracking-wide bg-emerald-500 text-zinc-950 px-3 py-1.5 hover:bg-emerald-400 disabled:opacity-40 flex items-center gap-1.5 transition-colors"
-          >
-            <Sparkles className={`w-3 h-3 ${busy ? "animate-pulse" : ""}`} />
-            {busy ? "Tailoring..." : analysis ? "Re-tailor" : "Tailor Resume"}
-          </button>
+          {status !== "ignored" && (
+            <button
+              data-testid={`tailor-btn-${job.id}`}
+              onClick={runTailor}
+              disabled={busy}
+              className="text-[11px] font-medium tracking-wide bg-emerald-500 text-zinc-950 px-3 py-1.5 hover:bg-emerald-400 disabled:opacity-40 flex items-center gap-1.5 transition-colors"
+            >
+              <Sparkles className={`w-3 h-3 ${busy ? "animate-pulse" : ""}`} />
+              {busy ? "Tailoring..." : analysis ? "Re-tailor" : "Tailor Resume"}
+            </button>
+          )}
 
           {STATUS_OPTIONS.map((opt) => {
             const Icon = opt.icon;
@@ -159,6 +162,7 @@ function JobRow({ job, onStatusChange, resume, llmReady, onSelectForResume }) {
               new: "border-zinc-600 text-zinc-200 bg-zinc-800",
               reviewed: "border-cyan-500/50 text-cyan-300 bg-cyan-500/15",
               applied: "border-emerald-500/60 text-emerald-300 bg-emerald-500/20",
+              ignored: "border-rose-500/50 text-rose-300 bg-rose-500/15",
             }[opt.key];
             return (
               <button
@@ -185,7 +189,7 @@ function JobRow({ job, onStatusChange, resume, llmReady, onSelectForResume }) {
           )}
         </div>
 
-        {!resume && (
+        {!resume && status !== "ignored" && (
           <div className="mt-2 text-[11px] text-zinc-500 font-mono flex items-center gap-1">
             <AlertCircle className="w-3 h-3" />
             Upload a resume above to enable tailoring for this job.

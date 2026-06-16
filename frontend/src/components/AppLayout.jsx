@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Outlet, NavLink, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, MapPin, Globe, Eye, CheckCircle2, Send,
-  RefreshCw, Clock, Cloud, Boxes, Layers, Linkedin,
+  RefreshCw, Clock, Cloud, Boxes, Layers, Linkedin, EyeOff, LogOut,
 } from "lucide-react";
 import { toast } from "sonner";
 import { apiJobsStats, apiStatus, apiScrape } from "@/lib/api";
@@ -17,7 +17,7 @@ const formatRelative = (iso) => {
   return `${h}h ${m % 60}m ago`;
 };
 
-export default function AppLayout() {
+export default function AppLayout({ onLogout, currentUser }) {
   const [stats, setStats] = useState({ by_status: { new: 0, reviewed: 0, applied: 0 }, by_region: { india: 0, remote: 0 }, by_tag: {}, by_platform: {}, total: 0 });
   const [status, setStatus] = useState(null);
   const [scraping, setScraping] = useState(false);
@@ -66,6 +66,7 @@ export default function AppLayout() {
     { to: "/jobs/new", label: "To Check", icon: Eye, count: stats.by_status.new },
     { to: "/jobs/reviewed", label: "Reviewed", icon: CheckCircle2, count: stats.by_status.reviewed },
     { to: "/jobs/applied", label: "Applied", icon: Send, count: stats.by_status.applied },
+    { to: "/jobs/ignored", label: "Ignored", icon: EyeOff, count: stats.by_status.ignored || 0 },
   ];
 
   return (
@@ -125,6 +126,15 @@ export default function AppLayout() {
           <div className="mt-1 text-zinc-600">
             auto twice daily · {(status?.scrape_times_ist || ["08:00", "20:00"]).join(" & ")} IST
           </div>
+          {onLogout && (
+            <button
+              onClick={onLogout}
+              className="mt-3 flex items-center gap-1.5 text-zinc-600 hover:text-rose-400 transition-colors"
+            >
+              <LogOut className="w-3 h-3" />
+              <span>Logout {currentUser ? `(${currentUser})` : ""}</span>
+            </button>
+          )}
         </div>
       </aside>
 
@@ -171,7 +181,7 @@ export default function AppLayout() {
         </header>
 
         <main className="flex-1 px-6 py-8 max-w-[1280px] w-full">
-          <Outlet context={{ stats, status, refreshStats: refresh }} />
+          <Outlet context={{ stats, status, refreshStats: refresh, onLogout }} />
         </main>
 
         <footer className="border-t border-zinc-800 py-4">
