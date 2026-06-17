@@ -50,17 +50,16 @@ def _extract_json(text: str) -> Dict[str, Any]:
 
 
 def analyze_with_openai(api_key: str, model: str, resume_text: str, job: Dict[str, Any]) -> Dict[str, Any]:
+    import os
     from openai import OpenAI
-    client = OpenAI(api_key=api_key,
-                     base_url="https://api.openai.com/v1",
-                    )
+    base_url = os.environ.get("LLM_BASE_URL") or None
+    client = OpenAI(api_key=api_key, base_url=base_url)
     resp = client.chat.completions.create(
-        model=model or "llama-3.3-70b-versatile",
+        model=model or "gpt-4o-mini",
         messages=[
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": _build_user_prompt(resume_text, job["title"], job["company"], job["description"])},
         ],
-        response_format={"type": "json_object"},
         temperature=0.3,
     )
     content = resp.choices[0].message.content or "{}"
@@ -87,3 +86,5 @@ def analyze(provider: str, api_key: str, model: str, resume_text: str, job: Dict
     if provider == "gemini":
         return analyze_with_gemini(api_key, model, resume_text, job)
     raise ValueError(f"Unknown provider: {provider}")
+
+
