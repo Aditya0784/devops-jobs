@@ -37,15 +37,107 @@ def _build_user_prompt(resume_text: str, job_title: str, company: str, job_descr
     )
 
 
+def _strip_code_fences(text: str) -> str:
+    """Remove ```json ... ``` or ``` ... ``` wrappers if the model added them."""
+    text = text.strip()
+    text = re.sub(r"^```(?:json)?\s*", "", text)
+    text = re.sub(r"\s*```$", "", text)
+    return text.strip()
+
+
+def _sanitize_control_chars(text: str) -> str:
+    """
+    Walk the JSON text and escape raw control characters (newline, tab, CR,
+    and other unescaped control chars) that appear *inside* string values.
+    Models sometimes emit literal newlines inside long multi-line fields
+    like "tailored_resume" instead of the escaped "\\n", which breaks
+    json.loads with errors like 'Invalid control character at: line X'.
+    """
+    out = []
+    in_string = False
+    escape_next = False
+
+    for ch in text:
+        if escape_next:
+            out.append(ch)
+            escape_next = False
+            continue
+
+        if ch == "\\":
+            out.append(ch)
+            escape_next = True
+            continue
+
+        if ch == '"':
+            in_string = not in_string
+            out.append(ch)
+            continue
+
+        if in_string:
+            if ch == "\n":
+                out.append("\\n")
+                continue
+            if ch == "\t":
+                out.append("\\t")
+                continue
+            if ch == "\r":
+                # drop bare carriage returns
+                continue
+            if ord(ch) < 0x20:
+                # any other stray control character -> escape as unicode
+                out.append("\\u%04x" % ord(ch))
+                continue
+
+        out.append(ch)
+
+    return "".join(out)
+
+
 def _extract_json(text: str) -> Dict[str, Any]:
-    # Try direct JSON first; otherwise extract the first {...} block.
-    try:
-        return json.loads(text)
-    except Exception:
-        pass
-    m = re.search(r"\{.*\}", text, re.DOTALL)
+    """
+    Robustly parse a JSON object out of an LLM response.
+    Tries, in order:
+      1. Direct json.loads on the raw text.
+      2. json.loads after stripping markdown code fences.
+      3. json.loads after sanitizing control characters.
+      4. Extracting the first {...} block and repeating steps 1-3 on it.
+    """
+    candidates = []
+
+    raw = text
+    candidates.append(raw)
+
+    fenced = _strip_code_fences(raw)
+    if fenced != raw:
+        candidates.append(fenced)
+
+    # Try the candidates as-is first
+    for c in candidates:
+        try:
+            return json.loads(c)
+        except Exception:
+            pass
+
+    # Try sanitized versions of the same candidates
+    for c in candidates:
+        try:
+            return json.loads(_sanitize_control_chars(c))
+        except Exception:
+            pass
+
+    # Fall back to extracting the first {...} block from the original text
+    m = re.search(r"\{.*\}", fenced, re.DOTALL)
     if m:
-        return json.loads(m.group(0))
+        block = m.group(0)
+        try:
+            return json.loads(block)
+        except Exception:
+            pass
+        try:
+            return json.loads(_sanitize_control_chars(block))
+        except Exception:
+            pass
+
     raise ValueError("Model did not return valid JSON")
 
 
@@ -86,5 +178,3 @@ def analyze(provider: str, api_key: str, model: str, resume_text: str, job: Dict
     if provider == "gemini":
         return analyze_with_gemini(api_key, model, resume_text, job)
     raise ValueError(f"Unknown provider: {provider}")
-
-
